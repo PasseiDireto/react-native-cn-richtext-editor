@@ -4,11 +4,11 @@ import { View, StyleSheet, Keyboard
 , KeyboardAvoidingView, Platform } from 'react-native';
 import { Permissions, ImagePicker } from 'expo';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import  CNRichTextEditor , { CNToolbar, getInitialObject , getDefaultStyles } from "react-native-cn-richtext-editor";
+import  CNRichTextEditor , { CNToolbar , getDefaultStyles, convertToObject } from "react-native-cn-richtext-editor";
 
 import {
     Menu,
-    MenuOptions,
+    MenuOptions, 
     MenuOption,
     MenuTrigger,
     MenuContext,
@@ -26,8 +26,9 @@ class App extends Component {
  
     constructor(props) {
         super(props);
-        
-
+        this.customStyles = {...defaultStyles, body: {fontSize: 12}, heading : {fontSize: 16}
+        , title : {fontSize: 20}, ol : {fontSize: 12 }, ul: {fontSize: 12}, bold: {fontSize: 12, fontWeight: 'bold', color: ''}
+        };  
         this.state = {
             selectedTag : 'body',
             selectedColor : 'default',
@@ -35,17 +36,17 @@ class App extends Component {
             colors : ['red', 'green', 'blue'],
             highlights:['yellow_hl','pink_hl', 'orange_hl', 'green_hl','purple_hl','blue_hl'],
             selectedStyles : [],
-            value: [getInitialObject]
+            // value: [getInitialObject()] get empty editor
+            value: convertToObject('<div><p><span>This is </span><span style="font-weight: bold;">bold</span><span> and </span><span style="font-style: italic;">italic </span><span>text</span></p></div>'
+            , this.customStyles)
         };
-
-        this.state.value = [getInitialObject()];
-
+        
         this.editor = null;
-      
+
     }
 
     onStyleKeyPress = (toolType) => {
-
+        
         if (toolType == 'image') {
             return;
         }
@@ -157,6 +158,12 @@ class App extends Component {
         this.setState({
             selectedHighlight: value
         });
+    }
+
+    onRemoveImage = ({url, id}) => {        
+        // do what you have to do after removing an image
+        console.log(`image removed (url : ${url})`);
+        
     }
 
     renderImageSelector() {
@@ -293,61 +300,138 @@ class App extends Component {
     }
 
     render() {
+        
+               
         return (
             <KeyboardAvoidingView 
             behavior="padding" 
             enabled
             keyboardVerticalOffset={IS_IOS ? 0 : 0}
-            style={{
-                flex: 1,
-                paddingTop: 20,
-                backgroundColor:'#eee',
-                flexDirection: 'column', 
-                justifyContent: 'flex-end', 
-            }}
-        >
-                <MenuProvider style={{flex: 1}}>
-
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss} >             
+            style={styles.root}
+            >
+            <MenuProvider style={{flex: 1}}>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss} >             
                     <View style={styles.main}>
                         <CNRichTextEditor                   
                             ref={input => this.editor = input}
                             onSelectedTagChanged={this.onSelectedTagChanged}
                             onSelectedStyleChanged={this.onSelectedStyleChanged}
                             value={this.state.value}
-                            style={{ backgroundColor : '#fff', padding : 10}}
-                            styleList={defaultStyles}
-                            //foreColor=''
+                            style={styles.editor}
+                            styleList={this.customStyles}
+                            foreColor='dimgray' // optional (will override default fore-color)
                             onValueChanged={this.onValueChanged}
-                            //onRemoveImage={this.onRemoveImage}
+                            onRemoveImage={this.onRemoveImage}
                         />                        
                     </View>
-            </TouchableWithoutFeedback>
+                </TouchableWithoutFeedback>
 
-            <View style={{
-                minHeight: 35
-            }}>
+                <View style={styles.toolbarContainer}>
 
-                <CNToolbar
-                    size={28}
-                    bold={<MaterialCommunityIcons name="format-bold" />}
-                    italic={<MaterialCommunityIcons name="format-italic" />}
-                    underline={<MaterialCommunityIcons name="format-underline" />}
-                    lineThrough={<MaterialCommunityIcons name="format-strikethrough-variant" />}
-                    body={<MaterialCommunityIcons name="format-text" />}
-                    title={<MaterialCommunityIcons name="format-header-1" />}
-                    heading={<MaterialCommunityIcons name="format-header-3" />}
-                    ul={<MaterialCommunityIcons name="format-list-bulleted" />}
-                    ol={<MaterialCommunityIcons name="format-list-numbers" />}
-                    image={this.renderImageSelector()}
-                    foreColor={this.renderColorSelector()}
-                    highlight={this.renderHighlight()}
-                    selectedTag={this.state.selectedTag}
-                    selectedStyles={this.state.selectedStyles}
-                    onStyleKeyPress={this.onStyleKeyPress} />
-            </View>
+                    <CNToolbar
+                        style={{
+                            height: 35,
+                        }}
+                        iconSetContainerStyle={{
+                            flexGrow: 1,
+                            justifyContent: 'space-evenly',
+                            alignItems: 'center',
+                        }}
+                        size={28} 
+                        iconSet={[
+                            {
+                                type: 'tool',
+                                iconArray: [{
+                                    toolTypeText: 'bold',
+                                    buttonTypes: 'style',
+                                    iconComponent: <MaterialCommunityIcons name="format-bold" />
+                                }, 
+                                {
+                                    toolTypeText: 'italic',
+                                    buttonTypes: 'style',
+                                    iconComponent: <MaterialCommunityIcons name="format-italic" />
+                                },
+                                {
+                                    toolTypeText: 'underline',
+                                    buttonTypes: 'style',
+                                    iconComponent: <MaterialCommunityIcons name="format-underline" />
+                                },
+                                {
+                                    toolTypeText: 'lineThrough',
+                                    buttonTypes: 'style',
+                                    iconComponent: <MaterialCommunityIcons name="format-strikethrough-variant" />
+                                }
+                            ]
+                            },
+                            {
+                                type: 'seperator'
+                            },
+                            {
+                                type: 'tool',
+                                iconArray: [
+                                    {
+                                        toolTypeText: 'body',
+                                        buttonTypes: 'tag',
+                                        iconComponent:
+                                        <MaterialCommunityIcons name="format-text" />
+                                    },
+                                    {
+                                        toolTypeText: 'title',
+                                        buttonTypes: 'tag',
+                                        iconComponent:
+                                        <MaterialCommunityIcons name="format-header-1" />
+                                    },
+                                    {
+                                        toolTypeText: 'heading',
+                                        buttonTypes: 'tag',
+                                        iconComponent:
+                                        <MaterialCommunityIcons name="format-header-3" />
+                                    },
+                                    {
+                                        toolTypeText: 'ul',
+                                        buttonTypes: 'tag',
+                                        iconComponent:
+                                        <MaterialCommunityIcons name="format-list-bulleted" />
+                                    },
+                                    {
+                                        toolTypeText: 'ol',
+                                        buttonTypes: 'tag',
+                                        iconComponent:
+                                        <MaterialCommunityIcons name="format-list-numbered" />
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'seperator'
+                            },
+                            {
+                                type: 'tool',
+                                iconArray: [
+                                {
+                                    toolTypeText: 'image',
+                                    iconComponent: this.renderImageSelector()
+                                },
+                                {
+                                    toolTypeText: 'color',
+                                    iconComponent: this.renderColorSelector()
+                                },
+                                {
+                                    toolTypeText: 'highlight',
+                                    iconComponent: this.renderHighlight()
+                                }]
+                            },
+                            
+                        ]}
+                        selectedTag={this.state.selectedTag}
+                        selectedStyles={this.state.selectedStyles}
+                        onStyleKeyPress={this.onStyleKeyPress} 
+                        backgroundColor="aliceblue" // optional (will override default backgroundColor)
+                        color="gray" // optional (will override default color)
+                        selectedColor='white' // optional (will override default selectedColor)
+                        selectedBackgroundColor='deepskyblue' // optional (will override default selectedBackgroundColor)
+                        /> 
+                </View>
             </MenuProvider>
-
         </KeyboardAvoidingView>
         );
     }
@@ -355,6 +439,13 @@ class App extends Component {
 }
 
 var styles = StyleSheet.create({
+    root: {
+        flex: 1,
+        paddingTop: 20,
+        backgroundColor:'#eee',
+        flexDirection: 'column', 
+        justifyContent: 'flex-end', 
+    },
     main: {
         flex: 1,
         marginTop: 10,
@@ -362,6 +453,12 @@ var styles = StyleSheet.create({
         paddingRight: 30,
         paddingBottom: 1,
         alignItems: 'stretch',
+    },
+    editor: { 
+        backgroundColor : '#fff'
+    },
+    toolbarContainer: {
+        minHeight: 35
     },
     menuOptionText: {
         textAlign: 'center',
