@@ -1467,7 +1467,7 @@ class CNTextInput extends Component {
         {...textInputProps}
         underlineColorAndroid="rgba(0,0,0,0)"
         onSelectionChange={this.onSelectionChange}
-        multiline={false}
+        multiline={true}
         style={[
           {
             color,
@@ -1486,7 +1486,7 @@ class CNTextInput extends Component {
         ref={(component) => (this.textInput = component)}
         onChangeText={this.handleChangeText}
         onKeyPress={this.handleKeyDown}
-        selection={selection}
+        // selection={selection}
         onFocus={this.onFocus}
         onBlur={this.onBlur}
         onContentSizeChange={this.handleContentSizeChange}
