@@ -3,6 +3,10 @@
   "version": "1.0.42",
   "description": "RichText Editor for React-Native",
   "main": "index.js",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src"
